@@ -36,10 +36,13 @@ ffmpeg command (black out / pixelate / secure blur / smooth blur). The video nev
 
 - Snapping takes the nearest qualifying line (not the strongest), frame edges count as lines, only the dragged
   edges snap, ⌥ disables it (also mid-drag).
-- Preview and ffmpeg share `encoderRect` (region + 4 px margin, even pixels) and the block grid.
+- Preview and ffmpeg share `encoderRect` (region + 4 px margin, even pixels) and the block grid. The preview
+  averages blocks itself (`averageBlocks`, like ffmpeg's `flags=area`): the browser's own downscaling samples,
+  which left 23% of blocks visibly off. Above `MAX_AVERAGED_PIXELS` it falls back to the browser's.
 - Strength levels scale with the video's height (`strengthPixels`), not the region's.
 - Secure blur: shrink → luma-only noise → upscale → gblur; every effect ends with `format=yuv420p` (an alpha
-  plane let the original show through).
+  plane let the original show through). Noise is fixed (no `allf=t`: per-frame noise can be averaged away over
+  frames, and shimmers) and light (`SECURE_NOISE` 10); the preview adds seeded noise of the same spread.
 - Encoding: `-crf 12 -preset slow -fps_mode passthrough` (screencast text quality, source frames kept).
 - A selected region outside its time range is a read-only ghost; clicking it jumps to its start. Selection
   isn't dropped then: Set start/end and edge double-click work from outside the range.

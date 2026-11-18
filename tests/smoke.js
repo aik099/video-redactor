@@ -210,7 +210,7 @@ export async function run() {
     mode.dispatchEvent(new Event('change', { bubbles: true }));
     check('secure blur defaults to Lv3', $('.row .level').value === '3' && barText() === '#1 (Blur (secure), Lv3)', barText());
     check('command: secure blur, no alpha, audio kept',
-      command().includes('noise=c0s=30:allf=t') && command().includes('format=yuv420p') && command().includes("-map '0:a?'"));
+      command().includes('noise=c0s=10,') && command().includes('format=yuv420p') && command().includes("-map '0:a?'"));
     const slider = $('.row .level');
     slider.value = '5';
     slider.dispatchEvent(new Event('input', { bubbles: true }));

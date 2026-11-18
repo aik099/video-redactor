@@ -4,7 +4,11 @@ import { setStatus } from './dom.js';
 import { encoderRect } from './ffmpeg.js';
 import { isActive } from './regions.js';
 import { frameLuma, snapRect } from './snapping.js';
-import { blockSize, smallSize, strengthPixels } from './strength.js';
+import { addNoise, averageBlocks, blockSize, smallSize, strengthPixels } from './strength.js';
+
+// Larger previews let the browser shrink the image (fast, but samples instead of averaging): averaging every
+// pixel on each redraw would slow playback
+const MAX_AVERAGED_PIXELS = 2_000_000;
 import { clamp, colorOf, formatTime } from './util.js';
 
 // Invisible resize zones as [edges moved, cursor]; corners last so they sit above the edge strips
@@ -64,6 +68,7 @@ export class Overlay {
   #snapFrame = null;  // frame brightness during a draw/resize drag
   #snappedEdges = []; // edges of the drawn/resized box currently on a line
   #lastPointer = null;
+  #scratchCanvas = null;  // reused for reading frame pixels of previews
 
   constructor(element, video, store, player) {
     this.element = element;
@@ -191,9 +196,20 @@ export class Overlay {
     canvas.width = small.w;
     canvas.height = small.h;
     const context = canvas.getContext('2d');
-    // Closer to ffmpeg's area averaging than the default
-    context.imageSmoothingQuality = 'high';
-    context.drawImage(video, rect.x, rect.y, rect.w, rect.h, 0, 0, small.w, small.h);
+
+    if (rect.w * rect.h <= MAX_AVERAGED_PIXELS) {
+      // Same block colours as ffmpeg (area averaging), plus its noise for secure blur
+      const blocks = averageBlocks(this.#framePixels(rect), rect.w, rect.h, small.w, small.h);
+
+      if (region.mode === 'secure') {
+        addNoise(blocks, region.id ?? 0);
+      }
+
+      context.putImageData(new ImageData(blocks, small.w, small.h), 0, 0);
+    } else {
+      context.imageSmoothingQuality = 'high';
+      context.drawImage(video, rect.x, rect.y, rect.w, rect.h, 0, 0, small.w, small.h);
+    }
 
     if (region.mode === 'secure') {
       // Unblurred copy underneath: CSS blur fades the canvas edges, which would show the original there
@@ -208,6 +224,17 @@ export class Overlay {
     preview.append(canvas);
 
     return preview;
+  }
+
+  // RGBA pixels of the current frame inside rect, through one reused canvas
+  #framePixels(rect) {
+    this.#scratchCanvas ??= document.createElement('canvas');
+    this.#scratchCanvas.width = rect.w;
+    this.#scratchCanvas.height = rect.h;
+    const context = this.#scratchCanvas.getContext('2d', { willReadFrequently: true });
+    context.drawImage(this.video, rect.x, rect.y, rect.w, rect.h, 0, 0, rect.w, rect.h);
+
+    return context.getImageData(0, 0, rect.w, rect.h).data;
   }
 
   #toVideoPoint(event) {

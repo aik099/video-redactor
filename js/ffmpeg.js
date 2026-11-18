@@ -1,6 +1,6 @@
 // ffmpeg command for the regions; videoSize = {width, height}
 import { RECT_MARGIN, TIME_MARGIN } from './config.js';
-import { strengthPixels, blockSize, smallSize } from './strength.js';
+import { SECURE_NOISE, strengthPixels, blockSize, smallSize } from './strength.js';
 import { baseName, ceilEven, floorEven, shellQuote } from './util.js';
 
 // Grows the rectangle by RECT_MARGIN and snaps it to even pixels (yuv420p crops odd sizes down)
@@ -32,10 +32,11 @@ export function regionFilter(region, index, inputLabel, outputLabel, videoSize) 
     const small = smallSize(rect, block);
     const shrink = `scale=${small.w}:${small.h}:flags=area`;
 
-    // Secure: blocks drop the text, per-frame luma noise hides block averages, smooth upscale + blur makes it soft
+    // Secure: blocks drop the text, luma noise hides block averages, smooth upscale + blur makes it soft.
+    // Fixed noise pattern: per-frame noise could be averaged away over frames, and it shimmers
     effect = region.mode === 'pixelate'
       ? `${shrink},scale=${rect.w}:${rect.h}:flags=neighbor`
-      : `${shrink},noise=c0s=30:allf=t,scale=${rect.w}:${rect.h}:flags=bicubic,gblur=sigma=${block / 2}`;
+      : `${shrink},noise=c0s=${SECURE_NOISE},scale=${rect.w}:${rect.h}:flags=bicubic,gblur=sigma=${block / 2}`;
   }
 
   // format: no alpha plane, or overlay could let the original show through

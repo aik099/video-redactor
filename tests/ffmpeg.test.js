@@ -29,7 +29,7 @@ test('command: per-mode filters, time margins, audio kept, names quoted', () => 
   // 720p: one level = 3px; pixelate Lv2 → 6px blocks
   assert.match(command, /crop=310:160:696:296,scale=52:27:flags=area,scale=310:160:flags=neighbor,format=yuv420p/);
   // Secure Lv3 → 9px blocks on a tiny 18px rect → 2x2 blocks, blur sigma 4.5
-  assert.match(command, /crop=18:18:896:46,scale=2:2:flags=area,noise=c0s=30:allf=t,scale=18:18:flags=bicubic,gblur=sigma=4.5,format=yuv420p/);
+  assert.match(command, /crop=18:18:896:46,scale=2:2:flags=area,noise=c0s=10,scale=18:18:flags=bicubic,gblur=sigma=4.5,format=yuv420p/);
   assert.match(command, /gblur=sigma=18,format=yuv420p\[effect3\];\[base3\]\[effect3\]overlay=196:496:enable='between\(t,7\.900,15\.100\)'\[out\]/);
   assert.match(command, /-map '\[out\]' -map '0:a\?' -c:v libx264 -crf 12 -preset slow -pix_fmt yuv420p -fps_mode passthrough/);
   assert.match(command, /'CleanShot 12\.00 it'\\''s-redacted\.mp4'$/);
