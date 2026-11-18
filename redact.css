@@ -1,0 +1,110 @@
+:root {
+  --bg: #f4f4f5; --panel: #ffffff; --text: #18181b; --muted: #71717a;
+  --border: #d4d4d8; --accent: #2563eb; --stage: #27272a; --lane: #ececee;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #18181b; --panel: #232326; --text: #e4e4e7; --muted: #a1a1aa;
+    --border: #3f3f46; --accent: #60a5fa; --stage: #0a0a0a; --lane: #2c2c30;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; height: 100vh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text);
+}
+header, footer { padding: 8px 12px; background: var(--panel); display: flex; gap: 8px; align-items: center; }
+header { border-bottom: 1px solid var(--border); }
+footer { border-top: 1px solid var(--border); flex-direction: column; align-items: stretch; }
+button, .button, #speedSelect {
+  font: inherit; padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg); color: var(--text); cursor: pointer;
+}
+button:disabled { opacity: .4; cursor: default; }
+#status { color: var(--muted); }
+.spacer { flex: 1; }
+main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; min-height: 0; }
+#editor { display: grid; grid-template-rows: minmax(0, 1fr) auto auto; min-height: 0; }
+#stage { background: var(--stage); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+#videoBox { position: relative; }
+#stage:not(.has-video) #videoBox, #stage.has-video #dropHint { display: none; }
+#dropHint { color: #a1a1aa; font-size: 15px; text-align: center; line-height: 1.6; pointer-events: none; }
+#dropHint b { color: #e4e4e7; }
+/* Files dragged over the page */
+#stage.dragging { outline: 2px dashed var(--accent); outline-offset: -8px; }
+video { display: block; }
+
+/* Regions on the video */
+#overlay { position: absolute; inset: 0; cursor: crosshair; touch-action: none; }
+.box { position: absolute; border: 2px solid; cursor: move; }
+/* Effect previews: behind the boxes, on ffmpeg's rectangle (region + margin) */
+#overlay .preview { position: absolute; overflow: hidden; pointer-events: none; }
+#overlay .preview canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+#overlay .preview.pixelate canvas { image-rendering: pixelated; }
+#overlay .preview.box { background: #000; }
+.box.draft { border-style: dashed; }
+/* Selected region outside its time range: read-only, click jumps to its start */
+.box.ghost {
+  border-width: 1px; border-style: dashed; cursor: pointer; opacity: .6;
+  background: repeating-linear-gradient(45deg, rgba(128, 128, 128, .25) 0 6px, transparent 6px 12px);
+}
+.box .ghost-text {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center;
+  font-size: 11px; color: #fff; text-shadow: 0 0 3px #000, 0 0 3px #000; white-space: nowrap; pointer-events: none;
+}
+.box.draft { border-color: #fff; }
+.box .label { position: absolute; top: 0; left: 0; color: #18181b; font-size: 11px; padding: 0 4px; pointer-events: none; }
+.box .handle { position: absolute; }
+
+/* Controls */
+#controls { display: flex; gap: 8px; align-items: center; padding: 8px 12px; background: var(--panel); border-top: 1px solid var(--border); }
+#timeLabel { font-variant-numeric: tabular-nums; min-width: 230px; }
+#zoomLabel { font-variant-numeric: tabular-nums; min-width: 72px; text-align: center; }
+
+/* Timeline */
+#timeline { position: relative; background: var(--panel); padding: 0 12px 8px; user-select: none; touch-action: none; overflow-x: auto; }
+#track { position: relative; min-width: 100%; }
+#ruler { position: relative; height: 20px; cursor: pointer; border-bottom: 1px solid var(--border); }
+.tick { position: absolute; top: 0; height: 100%; border-left: 1px solid var(--border); padding-left: 3px; font-size: 10px; color: var(--muted); }
+.lane { position: relative; height: 20px; margin-top: 3px; background: var(--lane); border-radius: 3px; cursor: pointer; }
+.bar { position: absolute; top: 0; height: 100%; border-radius: 3px; color: #18181b; font-size: 11px; padding-left: 8px; cursor: grab; overflow: hidden; white-space: nowrap; }
+.bar.selected { outline: 2px solid var(--text); outline-offset: -2px; }
+.edge { position: absolute; top: 0; width: 6px; height: 100%; cursor: ew-resize; background: rgba(255, 255, 255, .35); }
+.edge-start { left: 0; }
+.edge-end { right: 0; }
+#playhead { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--accent); z-index: 2; cursor: ew-resize; }
+/* Wider grab area than the 2px line */
+#playhead::before { content: ''; position: absolute; top: 0; bottom: 0; left: -4px; right: -4px; }
+/* Head on the ruler; centred by left, not transform: transformed boxes aren't pixel-snapped like the line */
+#playhead::after {
+  content: ''; position: absolute; top: 0; left: calc(50% - 6px); width: 12px; height: 14px;
+  background: inherit; clip-path: polygon(0 0, 100% 0, 100% 60%, 50% 100%, 0 60%);
+}
+#playhead.snapped { width: 4px; margin-left: -2px; }
+
+/* Region list */
+aside { background: var(--panel); border-left: 1px solid var(--border); padding: 8px 12px; overflow-y: auto; }
+aside h3 { margin: 4px 0 8px; font-size: 13px; }
+.row { display: grid; grid-template-columns: 38px 1fr 1fr 26px; gap: 4px; align-items: center; padding: 4px 3px; border-radius: 4px; cursor: pointer; }
+.row.selected { background: var(--lane); }
+.row .mode { grid-column: 1 / 3; }
+.row .level { grid-column: 3 / 5; }
+.row input:not([type=range]), .row select { font: inherit; width: 100%; min-width: 0; padding: 2px 4px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text); }
+.row button { padding: 2px 0; }
+.swatch { color: #18181b; border-radius: 3px; text-align: center; font-size: 11px; }
+.hint { color: var(--muted); font-size: 12px; }
+
+/* Sidebar help */
+.help { margin-top: 16px; padding-top: 8px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+.help h4 { margin: 12px 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--text); }
+.help ul { margin: 0; padding-left: 16px; }
+.help li { margin: 3px 0; }
+.help b { color: var(--text); font-weight: 600; }
+.help table { border-collapse: collapse; }
+.help td { padding: 2px 8px 2px 0; vertical-align: top; }
+.help td:first-child { white-space: nowrap; }
+kbd {
+  display: inline-block; min-width: 18px; padding: 0 4px; border: 1px solid var(--border); border-bottom-width: 2px;
+  border-radius: 4px; background: var(--bg); color: var(--text); font: 11px/16px -apple-system, BlinkMacSystemFont, sans-serif; text-align: center;
+}
+#command { width: 100%; font: 12px/1.4 ui-monospace, Menlo, monospace; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px; resize: vertical; }

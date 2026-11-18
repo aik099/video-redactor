@@ -1,0 +1,7 @@
+# macOS metadata (also created on the NFS mount)
+.DS_Store
+._*
+node_modules/
+# Specific to the local dev machine/VM, never public
+.htaccess
+CLAUDE.local.md

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video Redactor</title>
+<link rel="stylesheet" href="redact.css">
+<script type="module" src="js/main.js"></script>
+</head>
+<body>
+<header>
+  <label class="button">Open video…<input id="videoInput" type="file" accept="video/*" hidden></label>
+  <span class="hint">or drop a video / .regions.json anywhere</span>
+  <span id="fileName"></span>
+  <span id="status"></span>
+  <span class="spacer"></span>
+  <button id="saveButton">Save regions</button>
+  <label class="button">Load regions<input id="regionsInput" type="file" accept=".json,application/json" hidden></label>
+</header>
+<main>
+  <section id="editor">
+    <div id="stage">
+      <div id="dropHint">Drop a video here, or use <b>Open video…</b><br><small>A .regions.json file can be dropped too.</small></div>
+      <div id="videoBox"><video id="video" preload="auto" playsinline></video><div id="overlay"></div></div>
+    </div>
+    <div id="controls">
+      <button id="previousFrameButton" title="Previous frame (←)">‹</button>
+      <button id="playButton" title="Space">▶</button>
+      <button id="nextFrameButton" title="Next frame (→)">›</button>
+      <span id="timeLabel">0:00.000 / 0:00.000</span>
+      <select id="speedSelect" title="Playback speed">
+        <option value="0.1">0.1×</option><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option>
+      </select>
+      <button id="setStartButton">Set start</button>
+      <button id="setEndButton">Set end</button>
+      <button id="playRangeButton">Play range</button>
+      <button id="deleteButton">Delete</button>
+      <span class="spacer"></span>
+      <button id="zoomOutButton" title="Zoom timeline out (−)">−</button>
+      <span id="zoomLabel">Zoom 1×</span>
+      <button id="zoomInButton" title="Zoom timeline in (+)">+</button>
+    </div>
+    <div id="timeline"><div id="track"><div id="ruler"></div><div id="lanes"></div><div id="playhead"></div></div></div>
+  </section>
+  <aside>
+    <h3>Regions</h3>
+    <div id="regionList"></div>
+    <div class="help">
+      <h4>On the video</h4>
+      <ul>
+        <li><b>Draw</b> a box to add a region. It starts at the playhead and lasts 5 s.</li>
+        <li><b>Drag</b> a region to move it, its edges or corners to resize it.</li>
+        <li>Dragged edges <b>stick</b> to straight lines and to the video's edges; a thick edge is stuck. Hold <kbd>⌥</kbd> to stop it, also mid-drag.</li>
+        <li>Outside its time, the selected region is <b>greyed out</b>. Click it to jump to its start.</li>
+      </ul>
+      <h4>On the timeline</h4>
+      <ul>
+        <li><b>Drag</b> a bar to move its time range, its ends to change start or end.</li>
+        <li>Ends stick to the <b>playhead</b> (<kbd>⌥</kbd> stops it). <b>Double-click</b> an end to move it to the playhead.</li>
+        <li><b>Zoom</b> with <kbd>−</kbd> <kbd>+</kbd>, <kbd>⌘</kbd>+scroll or a pinch; scroll sideways to move along.</li>
+      </ul>
+      <h4>Keys</h4>
+      <table>
+        <tr><td><kbd>Space</kbd></td><td>Play / pause</td></tr>
+        <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>One frame (exact once the video has played a moment)</td></tr>
+        <tr><td><kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd></td><td>One second</td></tr>
+        <tr><td><kbd>−</kbd> <kbd>+</kbd></td><td>Zoom the timeline</td></tr>
+        <tr><td><kbd>Delete</kbd></td><td>Remove the selected region</td></tr>
+      </table>
+      <h4>Effects</h4>
+      <ul>
+        <li>The <b>strength</b> slider (1–10) makes blocks and blur bigger.</li>
+        <li>The preview is approximate. The ffmpeg command covers 4 px and 0.1 s more around each region.</li>
+      </ul>
+    </div>
+  </aside>
+</main>
+<footer>
+  <span class="hint">ffmpeg command: click to select, copy, run in the video's folder</span>
+  <textarea id="command" rows="5" readonly></textarea>
+</footer>
+</body>
+</html>
