@@ -1,0 +1,12 @@
+{
+  "video": "demo.mp4",
+  "width": 1280,
+  "height": 720,
+  "regions": [
+    { "id": 1, "x": 1056, "y": 32, "w": 150, "h": 22, "start": 0, "end": 20, "mode": "box", "level": 2 },
+    { "id": 2, "x": 376, "y": 292, "w": 360, "h": 32, "start": 0, "end": 10, "mode": "pixelate", "level": 3 },
+    { "id": 3, "x": 376, "y": 156, "w": 260, "h": 70, "start": 0, "end": 10, "mode": "secure", "level": 3 },
+    { "id": 4, "x": 1040, "y": 146, "w": 200, "h": 196, "start": 0, "end": 20, "mode": "blur", "level": 5 },
+    { "id": 5, "x": 376, "y": 156, "w": 362, "h": 170, "start": 10, "end": 20, "mode": "pixelate", "level": 3 }
+  ]
+}

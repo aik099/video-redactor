@@ -3,10 +3,13 @@
 Hide sensitive parts of a screen recording before you share it: draw boxes over the areas, choose when each one
 applies, and get a ready-to-run ffmpeg command that produces the redacted video.
 
-**Open it: https://aik099.github.io/video-redactor/**
+**Open it: https://aik.ninja/video-redactor/**
 
 The video never leaves your computer. The page only plays it in your browser and builds the command; ffmpeg runs on
 your machine.
+
+![Video Redactor with a demo recording: four regions with different effects, their time ranges on the timeline and
+the generated ffmpeg command](docs/screenshot.png)
 
 ## Features
 
@@ -30,6 +33,10 @@ your machine.
    the original.
 
 Needs [ffmpeg](https://ffmpeg.org/) (macOS: `brew install ffmpeg`). Tested in Brave (Chromium) on macOS.
+
+To try it without a recording of your own, use the demo in [`docs/demo/`](docs/demo/): `demo.mp4` (a made-up
+support console whose customer card changes at 10 s) and `demo.regions.json` (five regions covering it). Open the
+video, then load the regions file. `make-demo.sh` rebuilds the video.
 
 ## Development
 

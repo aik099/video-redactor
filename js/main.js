@@ -86,8 +86,9 @@ video.addEventListener('play', () => {
 video.addEventListener('pause', () => {
   $('#playButton').textContent = '▶';
 });
+// Stage shrinks not only with the window but also when the timeline gains rows (e.g. after loading regions)
+new ResizeObserver(() => overlay.fitVideo($('#stage'))).observe($('#stage'));
 window.addEventListener('resize', () => {
-  overlay.fitVideo($('#stage'));
   timeline.renderRuler();
 });
 

@@ -292,6 +292,19 @@ export async function run() {
     const previewCanvas = overlay.querySelector('.preview canvas');
     const previewPixels = previewCanvas?.getContext('2d').getImageData(0, 0, previewCanvas.width, previewCanvas.height).data;
     check('regions loaded before the video show their effect', previewPixels?.some((value, index) => index % 4 === 3 && value > 0));
+
+    // Regions loaded with a video open: the timeline grows, the video must shrink to still fit its area
+    const manyTransfer = new DataTransfer();
+    manyTransfer.items.add(new File([JSON.stringify({ width: 1280, height: 720, regions: [1, 2, 3, 4, 5, 6].map(id => (
+      { id, x: 10 * id, y: 10, w: 50, h: 50, start: 0, end: 5, mode: 'box' }
+    )) })], 'many.regions.json'));
+    $('#regionsInput').files = manyTransfer.files;
+    $('#regionsInput').dispatchEvent(new Event('change', { bubbles: true }));
+    await pause(200);
+    const stageBox = $('#stage').getBoundingClientRect();
+    const videoBox = video.getBoundingClientRect();
+    check('video still fits after the timeline grows', videoBox.top >= stageBox.top - 1 && videoBox.bottom <= stageBox.bottom + 1,
+      `video ${videoBox.top.toFixed(0)}..${videoBox.bottom.toFixed(0)}, stage ${stageBox.top.toFixed(0)}..${stageBox.bottom.toFixed(0)}`);
   } catch (error) {
     check('smoke test ran without exceptions', false, error.stack);
   } finally {
