@@ -23,6 +23,9 @@ button, .button, #speedSelect {
 button:disabled { opacity: .4; cursor: default; }
 #status { color: var(--muted); }
 .spacer { flex: 1; }
+.source-link { display: inline-flex; align-items: center; gap: 5px; margin-left: 4px; color: var(--muted); font-size: 12px; text-decoration: none; }
+.source-link:hover { color: var(--text); }
+.source-link svg { fill: currentColor; }
 main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; min-height: 0; }
 #editor { display: grid; grid-template-rows: minmax(0, 1fr) auto auto; min-height: 0; }
 #stage { background: var(--stage); display: flex; align-items: center; justify-content: center; overflow: hidden; }
