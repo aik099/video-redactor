@@ -208,13 +208,23 @@ export async function run() {
     const mode = $('.row .mode');
     mode.value = 'secure';
     mode.dispatchEvent(new Event('change', { bubbles: true }));
-    check('secure blur defaults to Lv3', $('.row .level').value === '3' && barText() === '#1 (Blur (secure), Lv3)', barText());
+    check('secure blur defaults to Lv3', $('.row .level').value === '3' && barText() === '#1 (Secure blur, Lv3)', barText());
     check('command: secure blur, no alpha, audio kept',
       command().includes('noise=c0s=10,') && command().includes('format=yuv420p') && command().includes("-map '0:a?'"));
     const slider = $('.row .level');
     slider.value = '5';
     slider.dispatchEvent(new Event('input', { bubbles: true }));
-    check('slider updates level live', barText() === '#1 (Blur (secure), Lv5)', barText());
+    check('slider updates level live', barText() === '#1 (Secure blur, Lv5)', barText());
+    const smooth = $('.row .mode');
+    smooth.value = 'blur';
+    smooth.dispatchEvent(new Event('change', { bubbles: true }));
+    check('smooth blur defaults to Lv4', $('.row .level').value === '4' && barText() === '#1 (Smooth blur, Lv4)', barText());
+    const blurPreview = overlay.querySelector('.preview.blur');
+    const blurCanvas = blurPreview?.querySelector('canvas');
+    const videoPixelsWide = blurPreview && parseFloat(blurPreview.style.width) * video.videoWidth / overlay.getBoundingClientRect().width;
+    check('smooth blur preview blurs the region itself at full resolution',
+      blurCanvas && Math.abs(blurCanvas.width - videoPixelsWide) < 1 && !blurPreview.style.backdropFilter,
+      `${blurCanvas?.width} vs ${videoPixelsWide?.toFixed(1)}`);
     const modeAgain = $('.row .mode');
     modeAgain.value = 'box';
     modeAgain.dispatchEvent(new Event('change', { bubbles: true }));
@@ -263,6 +273,14 @@ export async function run() {
     }
 
     check('zoom out to 1×', $('#zoomLabel').textContent === 'Zoom 1×', $('#zoomLabel').textContent);
+
+    // Esc deselects; clicking the list row selects again
+    press('Escape');
+    await pause(50);
+    check('Esc deselects the region', !$('.bar.selected') && !$('.row.selected') && $('#setStartButton').disabled);
+    $('.row').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await pause(100);
+    check('clicking the list row selects it again', $('.bar.selected') && !$('#setStartButton').disabled);
 
     // Delete
     press('Delete');

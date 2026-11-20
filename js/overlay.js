@@ -170,7 +170,7 @@ export class Overlay {
 
   // Effect on ffmpeg's rectangle (region + margin, even pixels) with its block grid, so it matches the output.
   // Black out: black fill; pixelate / secure blur: the frame's part shrunk to blocks, stretched back by CSS
-  // (hard edges or smooth + blurred); smooth blur: browser blur of the video behind it
+  // (hard edges or smooth + blurred); smooth blur: the frame's part blurred like ffmpeg's gblur
   #effectPreview(region, cssPerVideoPixel) {
     const video = this.video;
     const rect = encoderRect(region, { width: video.videoWidth, height: video.videoHeight });
@@ -183,9 +183,15 @@ export class Overlay {
     }
 
     if (region.mode === 'blur') {
-      // CSS blur radius is a gaussian sigma, same as ffmpeg's gblur
-      const sigma = strengthPixels(region.level, video.videoHeight) * cssPerVideoPixel;
-      preview.style.backdropFilter = preview.style.webkitBackdropFilter = `blur(${sigma}px)`;
+      // CSS/canvas blur radius is a gaussian sigma, same as ffmpeg's gblur (both measured: sigma 8 → 8.0/8.6)
+      const sigma = strengthPixels(region.level, video.videoHeight);
+
+      if (rect.w * rect.h <= MAX_AVERAGED_PIXELS) {
+        preview.append(this.#blurredRegion(rect, sigma));
+      } else {
+        // Blurs what's behind, so edges pull in content from outside the region (ffmpeg doesn't)
+        preview.style.backdropFilter = preview.style.webkitBackdropFilter = `blur(${sigma * cssPerVideoPixel}px)`;
+      }
 
       return preview;
     }
@@ -224,6 +230,45 @@ export class Overlay {
     preview.append(canvas);
 
     return preview;
+  }
+
+  // The frame's part inside rect, blurred at full resolution like gblur on ffmpeg's crop: only the region's own
+  // pixels, edges extended by repeating the border pixels (gblur keeps edges, it doesn't fade them)
+  #blurredRegion(rect, sigma) {
+    const pad = Math.ceil(sigma * 3);
+    const padded = document.createElement('canvas');
+    padded.width = rect.w + 2 * pad;
+    padded.height = rect.h + 2 * pad;
+    const context = padded.getContext('2d');
+    context.imageSmoothingEnabled = false;
+    const { video } = this;
+    const right = rect.x + rect.w - 1;
+    const bottom = rect.y + rect.h - 1;
+    // [source x, y, w, h] → [target x, y, w, h]: the region, its 4 border lines and 4 corner pixels stretched out
+    const pieces = [
+      [rect.x, rect.y, rect.w, rect.h, pad, pad, rect.w, rect.h],
+      [rect.x, rect.y, 1, rect.h, 0, pad, pad, rect.h],
+      [right, rect.y, 1, rect.h, pad + rect.w, pad, pad, rect.h],
+      [rect.x, rect.y, rect.w, 1, pad, 0, rect.w, pad],
+      [rect.x, bottom, rect.w, 1, pad, pad + rect.h, rect.w, pad],
+      [rect.x, rect.y, 1, 1, 0, 0, pad, pad],
+      [right, rect.y, 1, 1, pad + rect.w, 0, pad, pad],
+      [rect.x, bottom, 1, 1, 0, pad + rect.h, pad, pad],
+      [right, bottom, 1, 1, pad + rect.w, pad + rect.h, pad, pad],
+    ];
+
+    for (const piece of pieces) {
+      context.drawImage(video, ...piece);
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = rect.w;
+    canvas.height = rect.h;
+    const output = canvas.getContext('2d');
+    output.filter = `blur(${sigma}px)`;
+    output.drawImage(padded, -pad, -pad);
+
+    return canvas;
   }
 
   // RGBA pixels of the current frame inside rect, through one reused canvas

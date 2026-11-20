@@ -144,6 +144,8 @@ document.addEventListener('keydown', event => {
     timeline.setZoom(timeline.zoom / 2);
   } else if ((event.key === 'Delete' || event.key === 'Backspace') && store.selectedId !== null) {
     store.remove(store.selectedId);
+  } else if (event.key === 'Escape' && store.selectedId !== null) {
+    store.select(null);
   }
 });
 

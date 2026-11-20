@@ -2,10 +2,11 @@
 // xterm cube's middle levels (95/135/175/215), muted and readable on light and dark
 export const PALETTE = ['#d75f5f', '#d7af00', '#5faf5f', '#87afd7', '#af87ff', '#d7875f', '#5fafaf', '#d787af'];
 // Stored mode value → label; 'box' and 'blur' keep their names so older saved regions still load
-export const MODES = { box: 'Black out', pixelate: 'Pixelate', secure: 'Blur (secure)', blur: 'Blur (smooth)' };
+export const MODES = { box: 'Black out', pixelate: 'Pixelate', secure: 'Secure blur', blur: 'Smooth blur' };
 export const DEFAULT_MODE = 'pixelate';
-// Strength 1..10 a region gets when created or switched to the mode; secure blur at 2 still shows word shapes
-export const DEFAULT_LEVELS = { box: 2, pixelate: 2, secure: 3, blur: 2 };
+// Strength 1..10 a region gets when created or switched to the mode; lower levels still let text through:
+// secure blur Lv2 shows word shapes, smooth blur Lv2–3 leaves e-mails/phone numbers guessable
+export const DEFAULT_LEVELS = { box: 2, pixelate: 2, secure: 3, blur: 4 };
 
 export const DEFAULT_LENGTH = 5;   // s, range of a newly drawn region
 export const MIN_LENGTH = 0.05;    // s
