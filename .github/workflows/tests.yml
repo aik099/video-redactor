@@ -60,9 +60,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-      # Whole repo as is (no build step); dot-files like .github aren't uploaded
+      # Only the app's files (allow-list: a new app file must be added here); tests, docs etc. stay in the repo
+      - name: Collect the app's files
+        run: |
+          mkdir _site
+          cp -r index.html redact.css js _site/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4

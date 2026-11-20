@@ -8,7 +8,8 @@ ffmpeg command (black out / pixelate / secure blur / smooth blur). The video nev
 - Native ES modules, no build step: serve the folder over http(s) (any static server, e.g.
   `python3 -m http.server`). Doesn't work from `file://` (browsers block module imports there).
 - Published to GitHub Pages by the CI workflow's `publish` job (Pages source: GitHub Actions), only after both
-  test jobs pass on a push to `main`. Pages caches files ~10 min, so right after a publish a page may briefly mix
+  test jobs pass on a push to `main`. It publishes only the app: `index.html`, `redact.css`, `js/` (allow-list in
+  the job; add new app files there). Pages caches files ~10 min, so right after a publish a page may briefly mix
   old and new modules.
 - Machine-specific setup, if present: `CLAUDE.local.md` (git-ignored, never published).
 
