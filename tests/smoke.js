@@ -232,6 +232,13 @@ export async function run() {
     const blackOut = overlay.querySelector('.preview.box');
     check('black out preview is solid', blackOut && getComputedStyle(blackOut).backgroundColor === 'rgb(0, 0, 0)', blackOut && getComputedStyle(blackOut).backgroundColor);
     check('command: black out drawbox', command().includes('color=black:t=fill'));
+    // Black box on screen, in video pixels, must be the rectangle ffmpeg blacks out
+    const screenBox = blackOut.getBoundingClientRect();
+    const videoArea = video.getBoundingClientRect();
+    const toVideo = value => Math.round(value * video.videoWidth / videoArea.width);
+    const onScreen = [screenBox.left - videoArea.left, screenBox.top - videoArea.top, screenBox.width, screenBox.height].map(toVideo).join(',');
+    const drawbox = command().match(/drawbox=x=(\d+):y=(\d+):w=(\d+):h=(\d+)/)?.slice(1).join(',');
+    check('black out preview covers exactly the ffmpeg drawbox', onScreen === drawbox, `${onScreen} vs ${drawbox}`);
 
     // Playhead over the bar: grabbing 3px beside it keeps the time, dragging moves it by the drag only
     const playheadBox = $('#playhead').getBoundingClientRect();

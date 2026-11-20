@@ -2,6 +2,8 @@
 .DS_Store
 ._*
 node_modules/
+# Only dev tooling (Playwright for the smoke test); the app itself has no packages
+package-lock.json
 # Specific to the local dev machine/VM, never public
 .htaccess
 CLAUDE.local.md

@@ -13,11 +13,14 @@ ffmpeg command (black out / pixelate / secure blur / smooth blur). The video nev
 
 ## Tests
 
-- `npm test`: Node tests of the pure modules (snapping, ffmpeg command incl. a real ffmpeg run, region-file
-  validation). Needs `ffmpeg`/`ffprobe`.
-- Browser smoke test, on a fresh page load (console or Claude in Chrome):
+- `npm test`: Node tests of the pure modules (snapping, ffmpeg command incl. a real ffmpeg run, the area ffmpeg
+  really blacks out = the preview's `encoderRect`, region-file validation). Needs `ffmpeg`/`ffprobe`.
+- Browser smoke test (`tests/smoke.js`): drives the page only through DOM events and reads labels/command, so it
+  survives refactors. `npm run smoke` (`tests/run-smoke.mjs`) serves the folder and runs it headless via Playwright
+  in `BROWSER_PATH` (any Chromium-based browser) or Google Chrome; Playwright's own Chromium can't play the H.264
+  fixture. In a page (console or Claude in Chrome), on a fresh load:
   `const { run } = await import('./tests/smoke.js?' + Date.now()); await run()` → `{passed, failed, results}`.
-  Drives the page only through DOM events and reads labels/command, so it survives refactors.
+- CI (`.github/workflows/tests.yml`): both on every push / pull request, smoke with the runner's Chrome.
 - Fixture `tests/fixtures/ui.mp4`: synthetic (1280×720, 60 fps, 20 s, audio; pale separator x=596, field
   612..911 × 300..329 with corner gaps). Never commit real recordings.
 

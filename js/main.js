@@ -121,7 +121,8 @@ $('#command').addEventListener('focus', event => event.target.select());
 document.addEventListener('click', event => event.target.closest('button')?.blur());
 
 document.addEventListener('keydown', event => {
-  if (event.target.closest('input, select, textarea')) {
+  // `?.`: a key event sent to the document itself has no closest()
+  if (event.target.closest?.('input, select, textarea')) {
     return;
   }
 
