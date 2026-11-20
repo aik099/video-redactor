@@ -7,8 +7,9 @@ ffmpeg command (black out / pixelate / secure blur / smooth blur). The video nev
 
 - Native ES modules, no build step: serve the folder over http(s) (any static server, e.g.
   `python3 -m http.server`). Doesn't work from `file://` (browsers block module imports there).
-- Published with GitHub Pages from `main` (`.nojekyll`: files served as-is). Pages caches files ~10 min, so
-  right after a push a page may briefly mix old and new modules.
+- Published to GitHub Pages by the CI workflow's `publish` job (Pages source: GitHub Actions), only after both
+  test jobs pass on a push to `main`. Pages caches files ~10 min, so right after a publish a page may briefly mix
+  old and new modules.
 - Machine-specific setup, if present: `CLAUDE.local.md` (git-ignored, never published).
 
 ## Tests
@@ -20,7 +21,8 @@ ffmpeg command (black out / pixelate / secure blur / smooth blur). The video nev
   in `BROWSER_PATH` (any Chromium-based browser) or Google Chrome; Playwright's own Chromium can't play the H.264
   fixture. In a page (console or Claude in Chrome), on a fresh load:
   `const { run } = await import('./tests/smoke.js?' + Date.now()); await run()` → `{passed, failed, results}`.
-- CI (`.github/workflows/tests.yml`): both on every push / pull request, smoke with the runner's Chrome.
+- CI (`.github/workflows/tests.yml`): both on every push / pull request (smoke with the runner's Chrome,
+  ffmpeg from a BtbN static build: bump its release line when BtbN drops it), then `publish`.
 - Fixture `tests/fixtures/ui.mp4`: synthetic (1280×720, 60 fps, 20 s, audio; pale separator x=596, field
   612..911 × 300..329 with corner gaps). Never commit real recordings.
 

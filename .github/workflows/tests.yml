@@ -1,8 +1,11 @@
-name: Tests
+name: Tests and publish
 
 on:
   push:
   pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   unit:
@@ -13,8 +16,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      # Static build (seconds; apt's ffmpeg takes ~50 s for 89 packages). BtbN keeps only the 2 newest
+      # release lines: when n8.1 disappears from https://github.com/BtbN/FFmpeg-Builds/releases, bump it
       - name: Install ffmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+        run: |
+          mkdir -p "$HOME/ffmpeg"
+          curl -sSfL https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n8.1-latest-linux64-gpl-8.1.tar.xz \
+            | tar -xJ -C "$HOME/ffmpeg" --strip-components=2 --wildcards '*/bin/ffmpeg' '*/bin/ffprobe'
+          echo "$HOME/ffmpeg" >> "$GITHUB_PATH"
+          "$HOME/ffmpeg/ffmpeg" -hide_banner -version | head -1
       - run: npm test
 
   smoke:
@@ -31,3 +41,28 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
       - run: npm run smoke
+
+  # Needs Settings → Pages → Source: GitHub Actions. The live site only changes when both test jobs pass
+  publish:
+    name: Publish to GitHub Pages
+    needs: [unit, smoke]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      # Whole repo as is (no build step); dot-files like .github aren't uploaded
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4
